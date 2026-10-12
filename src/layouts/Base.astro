@@ -1,0 +1,92 @@
+---
+interface Props {
+  title: string;
+  description?: string;
+  /** 是否显示侧边栏章节导航 */
+  sidebar?: boolean;
+}
+import { getAllDocs } from "../lib/docs";
+import Sidebar from "../components/Sidebar.astro";
+import "../styles/global.css";
+
+const { title, description = "用 TypeScript 从零手写 AI Agent 的系统教程", sidebar = true } = Astro.props;
+
+const docs = await getAllDocs();
+const currentSlug = Astro.url.pathname.replace(/^\/|\/$/g, "");
+const fullTitle = title === "首页" ? "TS Agent：从零到英雄" : `${title} · TS Agent`;
+---
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <meta name="generator" content={Astro.generator} />
+    <title>{fullTitle}</title>
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%234f46e5'/%3E%3Ctext x='16' y='22' font-family='monospace' font-size='16' font-weight='bold' fill='white' text-anchor='middle'%3ETA%3C/text%3E%3C/svg%3E"
+    />
+
+    <script is:inline>
+      // 在首屏渲染前定好主题，避免闪白
+      (function () {
+        var saved = localStorage.getItem("tsa-theme");
+        var dark = saved
+          ? saved === "dark"
+          : window.matchMedia("(prefers-color-scheme: dark)").matches;
+        document.documentElement.dataset.theme = dark ? "dark" : "light";
+      })();
+    </script>
+  </head>
+
+  <body>
+    <header class="topbar">
+      <a class="topbar__brand" href="/">
+        TS<span>·</span>Agent 教程
+      </a>
+      <span class="topbar__spacer"></span>
+      <span class="topbar__meta">零框架 · TypeScript · 13 章</span>
+      <button class="btn" id="theme-toggle" type="button" aria-label="切换深色/浅色主题">
+        <span id="theme-icon">🌙</span>
+      </button>
+    </header>
+
+    <div class:list={["shell", { "shell--wide": !sidebar }]}>
+      {sidebar && <Sidebar docs={docs} currentSlug={currentSlug} />}
+      <main class="main">
+        <slot />
+      </main>
+      <slot name="toc" />
+    </div>
+
+    <script is:inline>
+      (function () {
+        var btn = document.getElementById("theme-toggle");
+        var icon = document.getElementById("theme-icon");
+        if (!btn || !icon) return;
+
+        function paint() {
+          var dark = document.documentElement.dataset.theme === "dark";
+          icon.textContent = dark ? "☀️" : "🌙";
+          btn.setAttribute("aria-label", dark ? "切换到浅色主题" : "切换到深色主题");
+        }
+        paint();
+
+        btn.addEventListener("click", function () {
+          var next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+          document.documentElement.dataset.theme = next;
+          localStorage.setItem("tsa-theme", next);
+          paint();
+        });
+      })();
+    </script>
+  </body>
+</html>

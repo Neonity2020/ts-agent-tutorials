@@ -1,0 +1,72 @@
+---
+import type { MarkdownHeading } from "astro";
+
+interface Props {
+  headings: MarkdownHeading[];
+}
+
+const { headings } = Astro.props;
+// 只保留 h2/h3，避免目录过长
+const items = headings.filter((h) => h.depth === 2 || h.depth === 3);
+---
+
+{
+  items.length > 1 && (
+    <nav class="toc" aria-label="本页目录">
+      <p class="toc__title">本页目录</p>
+      <ul class="toc__list">
+        {items.map((h) => (
+          <li>
+            <a class="toc__link" href={`#${h.slug}`} data-depth={String(h.depth)}>
+              {h.text}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  )
+}
+
+<script is:inline>
+  // 目录高亮：跟随阅读位置
+  (function () {
+    var links = Array.from(document.querySelectorAll(".toc__link"));
+    if (!links.length) return;
+
+    var targets = links
+      .map(function (a) {
+        return { a: a, el: document.getElementById(decodeURIComponent(a.getAttribute("href").slice(1))) };
+      })
+      .filter(function (t) {
+        return t.el;
+      });
+    if (!targets.length) return;
+
+    function mark() {
+      var y = window.scrollY + 100;
+      var active = targets[0];
+      for (var i = 0; i < targets.length; i++) {
+        if (targets[i].el.offsetTop <= y) active = targets[i];
+      }
+      targets.forEach(function (t) {
+        t.a.dataset.active = t === active ? "true" : "false";
+      });
+    }
+
+    var ticking = false;
+    window.addEventListener(
+      "scroll",
+      function () {
+        if (!ticking) {
+          ticking = true;
+          requestAnimationFrame(function () {
+            mark();
+            ticking = false;
+          });
+        }
+      },
+      { passive: true },
+    );
+    mark();
+  })();
+</script>

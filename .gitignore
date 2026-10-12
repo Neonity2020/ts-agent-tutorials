@@ -1,0 +1,23 @@
+# Astro
+node_modules/
+dist/
+.astro/
+.vercel/
+.netlify/
+
+# 运行时产物
+traces/
+.agent-sessions/
+notes/
+memory/
+evals/runs/
+
+# 密钥
+.env
+.env.*
+!.env.example
+
+# 系统
+.DS_Store
+# 工具状态目录
+.freebuff/

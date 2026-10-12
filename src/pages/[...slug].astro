@@ -1,0 +1,80 @@
+---
+import { render } from "astro:content";
+import Base from "../layouts/Base.astro";
+import Toc from "../components/Toc.astro";
+import { getAllDocs, urlOf, type DocWithMeta } from "../lib/docs";
+
+export async function getStaticPaths() {
+  const docs = await getAllDocs();
+  return docs.map((doc) => ({ params: { slug: doc.slug }, props: { doc, docs } }));
+}
+
+interface Props {
+  doc: DocWithMeta;
+  docs: DocWithMeta[];
+}
+
+const { doc, docs } = Astro.props;
+const { Content, headings } = await render(doc);
+
+// 上下章
+const idx = docs.findIndex((d) => d.slug === doc.slug);
+const prev = idx > 0 ? docs[idx - 1] : undefined;
+const next = idx < docs.length - 1 ? docs[idx + 1] : undefined;
+
+const label = (d: typeof prev) =>
+  d ? `${d.meta.chapter} · ${d.meta.short}` : "";
+---
+
+<Base title={doc.meta.title}>
+  <article class="prose">
+    <Content />
+  </article>
+
+  {
+    doc.meta.files.length > 0 && (
+      <aside class="docmeta">
+        <div>
+          <span class="docmeta__label">本章涉及的文件</span>
+          <ul class="docmeta__files">
+            {doc.meta.files.map((f) => (
+              <li>
+                <code>{f}</code>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </aside>
+    )
+  }
+
+  <nav class="pager" aria-label="章节翻页">
+    {
+      prev ? (
+        <a class="pager__item" href={urlOf(prev.slug)} rel="prev">
+          <span class="pager__dir">← 上一章</span>
+          <span class="pager__title">{label(prev)}</span>
+        </a>
+      ) : (
+        <a class="pager__item" href="/">
+          <span class="pager__dir">← 返回</span>
+          <span class="pager__title">教程首页</span>
+        </a>
+      )
+    }
+    {
+      next ? (
+        <a class="pager__item pager__item--next" href={urlOf(next.slug)} rel="next">
+          <span class="pager__dir">下一章 →</span>
+          <span class="pager__title">{label(next)}</span>
+        </a>
+      ) : (
+        <span class="pager__item pager__item--empty" />
+      )
+    }
+  </nav>
+
+  <Fragment slot="toc">
+    <Toc headings={headings} />
+  </Fragment>
+</Base>

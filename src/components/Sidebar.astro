@@ -1,0 +1,34 @@
+---
+import type { Doc } from "../lib/docs";
+import { urlOf } from "../lib/docs";
+
+interface Props {
+  docs: Array<Doc & { slug: string; meta: { order: number; appendix: boolean } }>;
+  currentSlug: string;
+}
+
+const { docs, currentSlug } = Astro.props;
+---
+
+<nav class="sidebar" aria-label="章节导航">
+  <p class="sidebar__title">目录</p>
+  <ul class="sidebar__list">
+    {
+      docs.map((d) => (
+        <li>
+          <a
+            class="sidebar__link"
+            href={urlOf(d.slug)}
+            aria-current={d.slug === currentSlug ? "page" : undefined}
+            title={d.meta.title}
+          >
+            <span class="sidebar__no">
+              {d.meta.appendix ? "附" : String(d.meta.order).padStart(2, "0")}
+            </span>
+            <span class="sidebar__label">{d.meta.short ?? d.meta.title}</span>
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</nav>
